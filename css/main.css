@@ -18,6 +18,10 @@ h1 {
     margin: 0 auto;
 }
 
+#game-board.game-finished {
+    pointer-events: none
+}
+
 .mark {
     text-align: center;
     line-height: 62px;
