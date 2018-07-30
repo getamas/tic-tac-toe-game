@@ -6,6 +6,10 @@ const gameBoard = (() => {
 
     let gameBoardArray = [' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' ];
 
+    const clearGameBoard = function() {
+        this.gameBoardArray = [' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' , ' ' ];
+    }
+
     const createGameBoard = function() {
         for (var i = 0; i < this.gameBoardArray.length; i++) {
             let markSpace = document.createElement('div');
@@ -22,7 +26,7 @@ const gameBoard = (() => {
         }
     }
 
-    return {gameBoardDisplay, gameBoardArray, createGameBoard};
+    return {gameBoardDisplay, gameBoardArray, createGameBoard, clearGameBoard};
 })();
 
 
@@ -30,11 +34,15 @@ const gameBoard = (() => {
 const Player = (name, mark) => {
     let spotsPlayed = [];
 
+    const clearPlayer = function() {
+        this.spotsPlayed = [];
+    }
+
     const play = function(id) {
         this.spotsPlayed.push(id);
     };
 
-    return { name, mark, spotsPlayed, play };
+    return { name, mark, spotsPlayed, play, clearPlayer };
 };
 
 
@@ -46,6 +54,8 @@ let player2 = Player('Player 2', 'o');
 // DISPLAY CONTROLLER MODULE
 const displayController = (() => {
     let currentPlayer = player1;
+    let winningLine = null;
+    let gameStarted = true;
     let gameFinished = false;
 
     const checkForWinner = function() {
@@ -54,12 +64,16 @@ const displayController = (() => {
         for (let i = 0; i < winningCombinations.length; i++) {
             if (winningCombinations[i].every(elem => currentPlayer.spotsPlayed.indexOf(elem) > -1)) {
                 document.getElementById('title').textContent = `${currentPlayer.name} WON!`;
+
+                winningLine = winningCombinations[i];
+
                 gameFinished = true;
             }
         }
     };
 
     const setPlayer = function() {
+        gameStarted = true;
         return currentPlayer === player1 ? currentPlayer = player2 : currentPlayer = player1;
     };
 
@@ -108,11 +122,22 @@ const displayController = (() => {
                         // 7. Check for a tie
                         if (!gameFinished && !gameBoard.gameBoardArray.includes(' ')) {
                             document.getElementById('title').textContent = `It's a DRAW!`;
-                            gameFinished = true;
                         }
 
-                        // 8. Make the game board unclickable if the game is finished
-                        if (gameFinished) gameBoard.gameBoardDisplay.className = 'game-finished';
+                        // 8. Make the game board unclickable if the game is finished and highlight winning line
+                        if (gameFinished) {
+                            gameBoard.gameBoardDisplay.className = 'game-finished';
+
+                            let spots = document.querySelectorAll('.mark');
+
+                            for (let i = 0; i < spots.length; i++) {
+                                for (let j = 0; j < winningLine.length; j++) {
+                                    if (parseInt(spots[i].dataset.id) === winningLine[j]) {
+                                        spots[i].classList.add('winningLine');
+                                    }
+                                }
+                            }
+                        }
 
                     }
                 }
@@ -120,7 +145,24 @@ const displayController = (() => {
         }
     };
 
-    return { playGame, printGame };
+    const clearGame = function() {
+        player1.clearPlayer();
+        player2.clearPlayer();
+        gameBoard.clearGameBoard();
+
+        gameFinished = false;
+        gameStarted = false;
+        currentPlayer = player1;
+
+        Array.from(gameBoard.gameBoardDisplay.children).forEach(elem => elem.remove());
+
+        document.getElementById('title').textContent = `Tic Tac Toe`;
+        gameBoard.gameBoardDisplay.className = '';
+
+        printGame();
+    };
+
+    return { playGame, printGame, clearGame };
 })();
 
 // Init Game
